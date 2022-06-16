@@ -54,7 +54,7 @@ In order to execute the evaluation of the policies, download and install OPA (ve
 Binaries are available for macOS, Linux and Windows. 
 
 The examples below demonstrating safe handling of GitHub's Personal Access Token via an environment variable rely on `cat` and `sed` which are typically available on macOS and Linux. They can be obtained for Windows as well, for example, by using [Git for Windows](https://gitforwindows.org/).
-It is also possible to put the token direcly into the configuration file, but do it at your own risk and make sure that it cannot be read by other users.
+It is also possible to put the token directly into the configuration file, but do it at your own risk and make sure that it cannot be read by other users.
 
 ### Clone this repository
 Clone the repository using:
@@ -67,7 +67,7 @@ cd gitgat
 ```
 
 
-### Configure the input.json configuraion file
+### Configure the input.json configuration file
 The configuration file for the examples below is expected to be `input.json`. Make sure you create this file in the main gitgat folder, using the following script:
 
 ```sh
@@ -75,7 +75,7 @@ cp data/empty-input.json input.json
 ```
 Samples of configuration files can be found in here: <https://github.com/scribe-security/GitHub-Posture/tree/public/data>.
 
-If you wish to add information or state to your `input.json` file you can refer to `data/sample_input.json`, for policies configuration and state managment. Each ruleset is its own JSON section and the state information for each rule fits inside that segment. Make sure that the state information does not get pushed to the repository as it might contain sensitive data.
+If you wish to add information or state to your `input.json` file you can refer to `data/sample_input.json`, for policies configuration and state management. Each ruleset is its own JSON section and the state information for each rule fits inside that segment. Make sure that the state information does not get pushed to the repository as it might contain sensitive data.
 
 `sample_input.json` is **not** included in .gitignore, but `input.json` is.
 So it is recommended to use `input.json` as the input configuration file for OPA.
@@ -84,7 +84,7 @@ So it is recommended to use `input.json` as the input configuration file for OPA
 ### Run the policies using OPA
 
 When running eval and report commands, pipe the token variable via stdin and sed. 
-Following are a few example of uses.
+Following are a few examples of uses.
 
 Create a report as a report as a gist in your GitHub account:
 
@@ -146,12 +146,12 @@ Configuration parameters are described in each module's section below.
 The state can be updated and approved by the policy administrator.
 Eval rules print out violations of policies.
 The violated rules can be used to configure exceptions allowed by the SCM administrator for the modules by updating the state of the modules.
-Additional information about modules is availabe in corresponding eval rules descriptions.
+Additional information about modules is available in corresponding eval rules descriptions.
 
 # Authentication modules
 
 ## 2 factor authentication
-  2 factor authentication protects against developers accounts passwords leakage. It is **highly recommended** to request users to enable 2 factor authentication.
+  2 factor authentication protects against developers account password leakage. It is **highly recommended** to request users to enable 2 factor authentication.
   Module *tfa* checks for organization members with 2 factor authentication disabled.
 
   Required permissions:
@@ -186,7 +186,7 @@ Additional information about modules is availabe in corresponding eval rules des
   Rule modules:
 
    * `data.github.ssh_keys.eval.state.expired` returns the list of SSH keys that are older than configured by the expiration parameter.
-   * `data.github.ssh_keys.eval.state.keys` returns the list of SSH keys that were not previously added to the input confiration.
+   * `data.github.ssh_keys.eval.state.keys` returns the list of SSH keys that were not previously added to the input configuration file.
      All the approved keys should be added to the configuration state.
 
 ## Deploy keys
@@ -208,7 +208,7 @@ Additional information about modules is availabe in corresponding eval rules des
 
 ## Commits
   Commit signatures can serve as an additional protection mechanism against compromised developer's accounts. Even when the password or an SSH key is leaked, the commit signing key will not necessarily be leaked and requiring signatures would prevent an attacker from authoring commits on behalf of a compromised developer's account. See branches section for documentation on enabling signatures enforcement per branch.
-  Module *commits* checks for commit signatures in specified repositories and for the history of commits to detect anomalities.
+  Module *commits* checks for commit signatures in specified repositories and for the history of commits to detect anomalies.
 
   Required permissions:
 
@@ -246,7 +246,7 @@ Additional information about modules is availabe in corresponding eval rules des
 
 ## Branches
   Branch protection is a set of configuration options to authorize commits that can be pushed to a branch. For more information, refer to SCM documentation.
-  Module *branches* monitors the branch protection cofiguration for a repository.
+  Module *branches* monitors the branch protection configuration for a repository.
 
   Required permissions:
 
@@ -281,7 +281,7 @@ Additional information about modules is availabe in corresponding eval rules des
 
    * `data.github.teams.eval.state.changed_permissions` returns the *newly added* permissions of teams in repositories.
    * `data.github.teams.eval.state.permissions` returns the permissions of teams in repositories for which no previous state was configured.
-   * `data.github.teams.eval.state.members` returns the lists of teams members that are not included in the input data.
+   * `data.github.teams.eval.state.members` returns the lists of team members that are not included in the input data.
      If the new state is approved, the teams permissions state should be updated.
 
 ## Files
