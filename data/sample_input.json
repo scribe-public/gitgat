@@ -1,0 +1,115 @@
+{
+    "token": "token GH_TOKEN",
+    "organizations": [ "orgs/org_id" ],
+    "tfa": {
+        "disabled_members": {
+	    "test_org": ["test_user"]
+        },
+	"unenforced_orgs": [ "org" ]
+    },
+    "admins": {
+        "members": {
+	    "<org>": ["<user login>"]
+	}
+    },
+    "commits": {
+	"owner/repo": {
+	    "allow_unverified": ["user"],
+	    "history": ["<commit sha>"]
+	}
+    },
+    "deploy_keys": {
+	"expiration": [1, 0, 0],
+	"keys": ["<SSH public key>"]
+    },
+    "ssh_keys": {
+	"expiration": [1, 0, 0],
+	"keys": ["<SSH public key>"]
+    },
+    "files": {
+	"permissions": {
+	    "owner/repo": {
+		"file pattern": [ "commiter" ]
+	    }
+	}
+    },
+    "hooks": {
+        "org/repo": [ {
+            "active": true,
+            "created_at": "2022-01-01T00:00:00Z",
+            "events": [
+		"label"
+            ],
+            "id": 1,
+            "name": "test",
+            "config": {
+		"content_type": "json",
+		"insecure_ssl": "0",
+		"url": "https://example.com"
+	    },
+	    "updated_at": "2022-01-01T00:01:00Z",
+	    "type": "Repository"
+	} ]
+    },
+    "teams": {
+        "permissions": {
+            "org": {
+                "team": {
+                    "owner/repo": {
+			"admin": true,
+			"maintain": true,
+			"pull": true,
+			"push": true,
+			"triage": true
+		    }
+		}
+	    }
+	},
+	"members": {
+	    "org/team": [ "member" ]
+	}
+    },
+    "branches": {
+	"protection_data": {
+	    "owner/repo/branches/main": {
+		"allow_deletions": {
+		    "enabled": false
+		},
+		"allow_force_pushes": {
+		    "enabled": false
+		},
+		"block_creations": {
+		    "enabled": false
+		},
+		"enforce_admins": {
+		    "enabled": false,
+		    "url": "https://api.github.com/repos/owner/repo/branches/main/protection/enforce_admins"
+		},
+		"required_conversation_resolution": {
+		    "enabled": false
+		},
+		"required_linear_history": {
+		    "enabled": true
+		},
+		"required_pull_request_reviews": {
+		    "dismiss_stale_reviews": false,
+		    "require_code_owner_reviews": false,
+		    "required_approving_review_count": 1,
+		    "url": "https://api.github.com/repos/owner/repo/branches/main/protection/required_pull_request_reviews"
+		},
+		"required_signatures": {
+		    "enabled": true,
+		    "url": "https://api.github.com/repos/owner/repo/branches/main/protection/required_signatures"
+		},
+		"required_status_checks": {
+		    "checks": [],
+		    "contexts": [],
+		    "contexts_url": "https://api.github.com/repos/owner/repo/branches/main/protection/required_status_checks/contexts",
+		    "strict": true,
+		    "url": "https://api.github.com/repos/owner/repo/branches/main/protection/required_status_checks"
+		},
+		"url": "https://api.github.com/repos/owner/repo/branches/main/protection"
+	    }
+	}
+    }
+}
