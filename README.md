@@ -2,7 +2,7 @@
 <center><img src='https://repository-images.githubusercontent.com/503625714/7e2cd452-c7f1-4718-8b5b-e2e89f43eb37' alt='Gitgat' width="250" /></center>
 
 # Source control system security posture
-SCM (Source Control Managment) security is of high importance as it serves as an entry point to the whole CI/CD pipeline. This repository contains policies that verify SCM (currently GitHub's) organization/repositories/user accounts security. The policies are evaluated using [Open Policy Agent (OPA)](https://openpolicyagent.org).
+SCM (Source Control Management) security is of high importance as it serves as an entry point to the whole CI/CD pipeline. This repository contains policies that verify SCM (currently GitHub's) organization/repositories/user accounts security. The policies are evaluated using [Open Policy Agent (OPA)](https://openpolicyagent.org).
 
 There are different sets of policies depending on which account is being evaluated. **Most policies are only relevent for organization owners**. See the bellow rulesets section.
 
