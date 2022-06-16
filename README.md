@@ -34,7 +34,7 @@ Run the following to get the report as a gist in your GitHub Account:
 docker run -e GH_TOKEN scribesecurity/gitgat:latest data.gh.post_gist
 ```
 
-You can access your report from <https://gist.github.com/>
+You can access your report from your gists <https://gist.github.com/>
 
 Run the following to get the report as a mark-down file:
 ```sh
