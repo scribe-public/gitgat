@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for your interest in contributing to the Github-Posture project.
+Thanks for your interest in contributing to the Gitgat project.
 
 The ways you can get involved:
 * Get involved in issue discussions
