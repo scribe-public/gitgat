@@ -321,3 +321,7 @@ Additional information about modules is available in corresponding eval rules de
 
    * `data.github.hooks.eval.state.hooks` returns the list of new/changed Web hooks.
      If the new state is approved, they should be added to the configuration state.
+
+# Contribute
+
+Information describing how to contribute can be found **[here](https://github.com/scribe-public/gitgat/blob/master/CONTRIBUTING.md)**.
