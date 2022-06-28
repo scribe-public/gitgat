@@ -1,4 +1,5 @@
 
+
 <center><img src='https://repository-images.githubusercontent.com/503625714/7e2cd452-c7f1-4718-8b5b-e2e89f43eb37' alt='Gitgat' width="250" /></center>
 
 # Source control system security posture
@@ -36,7 +37,7 @@ docker run -e GH_TOKEN scribesecurity/gitgat:latest data.gh.post_gist
 
 You can access your report from your gists <https://gist.github.com/>
 
-Run the following to get the report as a mark-down file:
+Run the following to get the report as a Markdown file:
 ```sh
 docker run -e GH_TOKEN scribesecurity/gitgat:latest data.github.print_report 2> report.md
 ```
@@ -45,7 +46,15 @@ Run the following to get the report as a JSON object:
 ```sh
 docker run -e GH_TOKEN scribesecurity/gitgat:latest data.gh.eval
 ```
-
+In order to run the report using the variables and state you have saved in the input.json file use this command:
+```sh
+docker run -e GH_TOKEN -v <full_path_to_directory_containing_input_file>:/var/opt/opa scribesecurity/gitgat:latest
+```
+If you have already included the token in the input.json file you can shorten it to:
+```sh
+docker run -v <full_path_to_directory_containing_input_file>:/var/opt/opa scribesecurity/gitgat:latest
+```
+Note that the default report is the JSON version so if you want to get the Markdown file you need to spesify it as seen at the top of this section.
 
 ## Run Using the OPA CLI
 
