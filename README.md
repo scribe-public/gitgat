@@ -39,7 +39,7 @@ You can access your report from your gists <https://gist.github.com/>
 
 Run the following to get the report as a Markdown file:
 ```sh
-docker run -e GH_TOKEN scribesecurity/gitgat:latest data.github.print_report 2> report.md
+docker run -e GH_TOKEN scribesecurity/gitgat:latest data.github.report.print_report 2> report.md
 ```
 
 Run the following to get the report as a JSON object:
