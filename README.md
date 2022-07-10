@@ -82,7 +82,7 @@ The configuration file for the examples below is expected to be `input.json`. Ma
 ```sh
 cp data/empty-input.json input.json  
 ```
-Samples of configuration files can be found in here: <https://github.com/scribe-security/GitHub-Posture/tree/public/data>.
+Samples of configuration files can be found in here: <https://github.com/scribe-public/gitgat/blob/master/data/>.
 
 If you wish to add information or state to your `input.json` file you can refer to `data/sample_input.json`, for policies configuration and state management. Each ruleset is its own JSON section and the state information for each rule fits inside that segment. Make sure that the state information does not get pushed to the repository as it might contain sensitive data.
 
