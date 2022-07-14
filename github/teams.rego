@@ -60,13 +60,13 @@ non_empty_new_members[k] = new_members[k] {
 
 members_findings = v {
   count(non_empty_new_members) > 1
-  c_findings := "(i) %d teams have new members."
+  c_findings := "(i) %d teams have members to be reviewed."
   v := sprintf(c_findings, [count(non_empty_new_members)])
 }
 
 members_findings = v {
   count(non_empty_new_members) == 1
-  v := "(i) 1 team has new members."
+  v := "(i) 1 team has members to be reviewed."
 }
 
 members_findings = v {
@@ -105,6 +105,10 @@ permissions = { k: v |
   v := current_permissions[k]
 }
 
+non_empty_permissions[x] = permissions[x] {
+  count(permissions[x]) > 0
+}
+
 changed_permissions = { k: v |
   some t;
   k := state_available[t];
@@ -112,20 +116,25 @@ changed_permissions = { k: v |
   v := current_permissions[k]
 }
 
+admin_permissions = { k: v |
+  permissions[k]["admin"]
+  v = permissions[k]
+}  
+
 permissions_findings = v {
-  count(permissions) == 0
-  v := "(v) all teams permissions are verified."
+  count(admin_permissions) == 0
+  v := "(v) no teams with admin permissions are found."
 }
 
 permissions_findings = v {
-  count(permissions) > 1
-  c_findings := "(i) %d teams permissions should be reviewed."
-  v := sprintf(c_findings, [count(permissions)])
+  count(admin_permissions) > 1
+  c_findings := "(i) %d teams have admin permissions in some repositories."
+  v := sprintf(c_findings, [count(admin_permissions)])
 }
 
 permissions_findings = v {
-  count(permissions) == 1
-  v := "(i) 1 team's permissions should be reviewed."
+  count(admin_permissions) == 1
+  v := "(i) 1 team has admin permissions in 1 of the repositories."
 }
 
 eval = v {
@@ -138,24 +147,38 @@ eval = v {
   }
 }
 
-findings := concat("\n", [members_findings, permissions_findings])
+findings := concat("\n\n", [members_findings, permissions_findings])
+
+overview_section := concat("\n", [
+  "Excess permissions may be exploited, intentionally or unintentionally.",
+  "Limiting permissions will limit the potential damage of credential theft, account-takeover or developer-workstation-takeover.",
+])
+
+recommendation_section := concat("\n", [
+  "Review the permissions for team members according to our recommendations below.",
+  "Remove team members who are not active or are no longer on the team.",
+])
 
 report := [
   "## Teams",
   "### Motivation",
-  "Excess permissions may be exploited, intentionally or unintentionally.",
-  "Limiting permissions will limit the potential damage of credential theft, account-takeover or developer-workstation-takeover.",
+  "%s",
   "",
 
   "### Key Findings",
   "%s",
   "",
+  "See [below](#teams-1) for a detailed report.",
+  "",
 
   "### Our Recommendation",
-  "Review the permissions for team members according to our recommendations below.",
-  "Remove team members who are not active or are no longer on the team.",
-  "You can manage team permissions at the following links:",
   "%s",
+  "You can manage team permissions at the following links:",
+  "<details>",
+  "<summary>Click to expand</summary>",
+  "",
+  "%s",
+  "</details>",
   "",
 ]
 
@@ -171,5 +194,52 @@ access_settings_urls := { v |
 overview_report := v {
   c_report := concat("\n", report)
   urls := utils.json_to_md_list(access_settings_urls, "  ")
-  v := sprintf(c_report, [findings, urls])
+  v := sprintf(c_report, [overview_section, findings, recommendation_section, urls])
+}
+
+d_report := [
+  "## Teams",
+  "%s",
+  "%s",
+  "",
+  "Go [back](#teams) to the overview report.",
+  "",
+
+  "<details open>",
+  "<summary> <b>Members</b> </summary>",
+  "",
+  "%s",
+  "</details>",
+  "",
+
+  "<details open>",
+  "<summary> <b>Teams Permissions</b> </summary>",
+  "",
+  "%s",
+  "</details>",
+  "",
+]
+
+members_details = v {
+  count(non_empty_new_members) == 0
+  v := "None"
+}
+
+members_details = v {
+  count(non_empty_new_members) > 0
+  v := utils.json_to_md_dict_of_lists(non_empty_new_members, "  ")
+}
+
+permissions_details = v {
+  count(non_empty_permissions) == 0
+  v := "None"
+}
+
+permissions_details = v {
+  count(non_empty_permissions) > 0
+  v := utils.json_to_md_dict_of_dicts(non_empty_permissions, ":", "  ")
+}
+
+detailed_report := v {
+  v := sprintf(concat("\n", d_report), [overview_section, recommendation_section, members_details, permissions_details])
 }

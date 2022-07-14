@@ -73,32 +73,109 @@ eval = v {
   }
 }
 
+overview_section := concat("\n", [
+  "2 factor authentication protects your account from credential theft.",
+])
+
+recommendation_section := concat("\n", [
+  "Require all users in your GitHub organization to turn on 2 factor authentication.",
+  "They can do it from the following link: <https://github.com/settings/security>.",
+  "",
+  "Configure your GitHub organizations to enforce 2 factor authentication on all organizations’ users.",
+])
+
 report := [
   "## Two Factor Authentication",
   "### Motivation",
-  "2 factor authentication protects your account from credential theft.",
+  "%s",
   "",
 
   "### Key Findings",
   "%s",
   "",
+  "See [below](#two-factor-authentication-1) for a detailed report.",
+  "",
 
   "### Our Recommendation",
-  "Require all users in your GitHub organization to turn on 2 factor authentication. They can do it from the following link: <https://github.com/settings/security>.",
-  "Configure your GitHub organizations to enforce 2 factor authentication on all organizations’ users. That can be done from the following link(s):",
   "%s",
+  "That can be done from the following link(s):",
+  "<details>",
+  "<summary>Click to expand</summary>",
+  "",
+  "%s",
+  "</details>",
   "",
 ]
 
 settings_urls := { v |
   some k in unenforced_orgs
-  v := sprintf("<%s>", [concat("/", [orgs[k].html_url, "settings", "security"])])
+  v := sprintf("<%s>", [concat("/", ["https://github.com/organizations", orgs[k].login, "settings", "security"])])
 }
 
-findings := concat("\n", [members_findings, unenforced_findings])
+findings := concat("\n\n", [members_findings, unenforced_findings])
 
 overview_report := v {
   c_report := concat("\n", report)
   urls := utils.json_to_md_list(settings_urls, "  ")
-  v := sprintf(c_report, [findings, urls])
+  v := sprintf(c_report, [overview_section, findings, recommendation_section, urls])
+}
+
+d_report := [
+  "## Two Factor Authentication",
+  "%s",
+  "%s",
+  "",
+  "Go [back](#two-factor-authentication) to the overview report.",
+  "",
+
+  "<details open>",
+  "<summary> <b>Two Factor Disabled Members</b> </summary>",
+  "",
+  "%s",
+  "</details>",
+  "",
+
+  "<details open>",
+  "<summary> <b>Two Factor Unenforced Organizations</b> </summary>",
+  "",
+  "%s",
+  "</details>",
+  "",
+]
+
+disabled_details = v {
+  count(non_empty_tfa_disabled_members) == 0
+  v := "All members in all organizations have two factor authentication enabled."
+}
+
+disabled_details = v {
+  count(non_empty_tfa_disabled_members) > 0
+  v := utils.json_to_md_dict_of_lists(non_empty_tfa_disabled_members, "  ")
+}
+
+unenforced_details = v {
+  count(unenforced_orgs) == 0
+  v := "All organizations enforce two factor authentication on their members."
+}
+
+unenforced_details = v {
+  count(unenforced_orgs) > 0
+  table := { orgs[k].login: u |
+    some k in unenforced_orgs
+    u := sprintf("[Settings](<%s>)", [concat("/", ["https://github.com/organizations", orgs[k].login, "settings", "security"])])
+  }
+
+  header := "| Organization | Link |"
+  delim := "| --- | --- |"
+  body := utils.json_to_md_dict_to_table(table, "  ")
+  v := concat("\n", [header, delim, body])
+}
+
+detailed_report := v {
+  v := sprintf(concat("\n", d_report), [overview_section, recommendation_section, disabled_details, unenforced_details])
+}
+
+update := v {
+  v := { "disabled_members": current_tfa_disabled_members,
+    "unenforced_orgs": current_unenforced_orgs }
 }

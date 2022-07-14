@@ -39,12 +39,32 @@ protection_data[x] = protection_responses[x] {
   not utils.is_error(protection_responses[x])
 }
 
+filtered_protection_data[x] = v {
+  d := protection_data[x]
+  v := {
+    "allow_deletions": d["allow_deletions"]["enabled"],
+    "allow_force_pushes": d["allow_force_pushes"]["enabled"],
+    "block_creations": d["block_creations"]["enabled"],
+    "enforce_admins": d["enforce_admins"]["enabled"],
+    "required_conversation_resolution": d["required_conversation_resolution"]["enabled"],
+    "required_linear_history": d["required_linear_history"]["enabled"],
+    "dismiss_stale_reviews": d["required_pull_request_reviews"]["dismiss_stale_reviews"],
+    "require_code_owner_reviews": d["required_pull_request_reviews"]["require_code_owner_reviews"],
+    "required_signatures": d["required_signatures"]["enabled"],
+  }
+}
+
 unchanged_protection[x] = protection_data[x] {
   protection_data[x] == data.github.state.branches.protection_data[x]
 }
 
 protection_diff[x] = protection_data[x] {
   not protection_data[x] == data.github.state.branches.protection_data[x]
+}
+
+recommendation_diff[x] = v {
+  not filtered_protection_data[x] == data.github.state.branches.recommended_protection
+  v := filtered_protection_data[x]
 }
 
 protected_findings = v {
@@ -89,29 +109,41 @@ eval = v {
   }
 }
 
-findings := concat("\n", [protected_findings, diff_findings])
+findings := concat("\n\n", [protected_findings, diff_findings])
+
+overview_section := concat("\n", [
+  "Branch protection are specific protection mechanisms that limit users from making dangerous modifications of your repositories.",
+  "Branch protection rules include requiring pull-request reviews, signed commits and limiting deleting history.",
+  "GitHub Branch protection rules are detailed at the following link:",
+  "<https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/defining-the-mergeability-of-pull-requests/about-protected-branches>.",
+  "Branch protection is managed at the repository-branch level.",
+])
+
+recommendation_section := concat("\n", [
+  "You should configure branch protection for the main branches of your repositories.",
+  "Branch protection rules for these branches should include requiring pull-request-reviews, signed commits, and not allowing deletions.",
+])
 
 report := [
   "## Branch Protection",
   "### Motivation",
-  "Branch protection are specific protection mechanisms that limit users from making dangerous modifications of your repositories.",
-  "Branch protection rules include requiring pull-request reviews, signed commits and limiting deleting history.",
-  "GitHub Branch protection rules are detailed at the following link:",
-  "<https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/defining-the-mergeability-of-pull-requests/about-protected-branches>",
-  "Branch protection is managed at the repository-branch level.",
+  "%s",
   "",
 
   "### Key Findings",
   "%s",
   "",
-  "See [below][#branches_details] for a detailed report.",
+  "See [below](#branch-protection-1) for a detailed report.",
   "",
 
   "### Our Recommendation",
-  "You should configure branch protection for the main branches of your repositories.",
-  "Branch protection rules for these branches should include requiring pull-request-reviews, signed commits, and not allowing deletions.",
-  "This can be done from the following links:",
   "%s",
+  "This can be done from the following links:",
+  "<details>",
+  "<summary>Click to expand</summary>",
+  "",
+  "%s",
+  "</details>",
   "",
 ]
 
@@ -122,15 +154,66 @@ settings_urls := { v |
 
 overview_report := v {
   c_report := concat("\n", report)
-  v := sprintf(c_report, [findings, utils.json_to_md_list(settings_urls, "  ")])
+  v := sprintf(c_report, [overview_section, findings, recommendation_section, utils.json_to_md_list(settings_urls, "  ")])
 }
 
 d_report := [
-  "## Branch Protection {#branches_details}",
-  "### Unprotected Branches",
+  "## Branch Protection",
+  "%s",
   "%s",
   "",
+  "Go [back](#branch-protection) to the overview report.",
+  "",
+
+  "<details open>",
+  "<summary> <b>Branch Protection</b> </summary>",
+  "",
+  "%s",
+  "</details>",
+  "",
+
+  "<details open>",
+  "<summary> <b>Unprotected Branches</b> </summary>",
+  "",
+  "%s",
+  "</details>",
+  "",
 ]
+
+create_table_row(k, v, r, e) = res {
+  res := { "Setting": k, "Value": v, "Recommended": r, "Explanation": e }
+}
+
+explanations := {
+  "allow_deletions": "",
+  "allow_force_pushes": "",
+  "block_creations": "",
+  "enforce_admins": "",
+  "required_conversation_resolution": "",
+  "required_linear_history": "",
+  "dismiss_stale_reviews": "",
+  "require_code_owner_reviews": "",
+  "required_signatures": "",
+}
+
+protection_table_data[x] := v {
+  d := recommendation_diff[x]
+  r := data.github.state.branches.recommended_protection
+  v := [ row | some k, diff in d; row := create_table_row(k, d[k], r[k], explanations[k]) ]
+}
+
+format_table_row(row) = res {
+  res := sprintf("| %v | %v | %v | %v |", [row["Setting"], row["Value"], row["Recommended"], row["Explanation"]])
+}
+
+table_header := "| Setting | Value | Recommended | Explanation |"
+delim := "| --- | --- | --- | --- |"
+
+format_table(table_data) = res {
+  rows := [ format_table_row(x) | some x in table_data ]
+  concated_rows := concat("\n", rows)
+  res := concat("\n", [table_header, delim, concated_rows, ""])
+}
 
 unprotected_details = v {
   count(unprotected_branches) == 0
@@ -139,9 +222,35 @@ unprotected_details = v {
 
 unprotected_details = v {
   count(unprotected_branches) > 0
-  v := utils.json_to_md_list(unprotected_branches, "  ")
+
+  table := { branch: link |
+    branch := unprotected_branches[x]
+    parts := split(branch, "/")
+    repo_full := concat("/", [parts[0], parts[1]])
+    link := sprintf("[Settings](<https://github.com/%s/settings/branches>)", [repo_full])
+  }
+
+  header := "| Branch | Link |"
+  delim := "| --- | --- |"
+  body := utils.json_to_md_dict_to_table(table, "  ")
+  v := concat("\n", [header, delim, body])
+}
+
+protection_details = v {
+  count(recommendation_diff) == 0
+  v := "None"
+}
+
+tables := { k: v |
+  some k, t in protection_table_data
+  v := sprintf("%s", [sprintf(format_table(t), [])])
+}
+
+protection_details = v {
+  count(recommendation_diff) > 0
+  v := utils.json_to_md_dict(tables, ":\n\n", "  ")
 }
 
 detailed_report := v {
-  v := sprintf(concat("\n", d_report), [unprotected_details])
+  v := sprintf(concat("\n", d_report), [overview_section, recommendation_section, protection_details, unprotected_details])
 }

@@ -113,6 +113,9 @@ flatten_array(array_of_objects, field) = [ v |
   v := obj[field]
 ]
 
+# object = { field1: { field2: value1 } -> { field1: value1 }
+# extract_field(object, field) = [
+
 # flatten_array = apply json.filter
 # flatten_array(array_of_objects, field) = mapped {
 #   mapped := [ json.filter(x) | x = array_of_objects[_] ]
@@ -138,11 +141,24 @@ json_to_md_list(json_input, indent) = res {
   res := sprintf("%s", [s])
 }
 
+json_to_md_dict(json_input, separator, indent) = res {
+  s := concat("\n", [sprintf("%s* %v%s %v", [indent, k, separator, v]) | v = json_input[k]])
+  res := sprintf("%s", [s])
+}
+
 json_to_md_headed_list(k, json_list, indent) = res {
   extra_indent := sprintf("  %s", [indent])
   list_str := json_to_md_list(json_list, extra_indent)
   header := sprintf("%s* **%s**:", [indent, k])
   s := concat("\n", [header, list_str])
+  res := sprintf("%s", [s])
+}
+
+json_to_md_headed_dict(k, json_dict, separator, indent) = res {
+  extra_indent := sprintf("  %s", [indent])
+  dict_str := json_to_md_dict(json_dict, separator, extra_indent)
+  header := sprintf("%s* **%s**:", [indent, k])
+  s := concat("\n", [header, dict_str])
   res := sprintf("%s", [s])
 }
 
@@ -153,18 +169,47 @@ json_to_md_headed_list(k, json_list, indent) = res {
 #       * 3
 
 json_to_md_dict_of_lists(json_input, indent) = res {
-  #some k, json_list in json_input
   s := concat("\n", [json_to_md_headed_list(k, json_list, indent) | some k, json_list in json_input])
   res := sprintf("%s", [s])
 }
 
-json_to_md_row_of_int(k, v, indent) = res {
-  res := sprintf("%s* %s - %d", [indent, k, v])
+json_to_md_dict_of_dicts(json_input, separator, indent) = res {
+  s := concat("\n", [json_to_md_headed_dict(k, json_list, separator, indent) | some k, json_list in json_input])
+  res := sprintf("%s", [s])
 }
 
-json_to_md_dict_of_int(json_input, indent) = res {
-  s := concat("\n", [json_to_md_row_of_int(k, v, indent) | some k, v in json_input])
-  res := sprintf("%s", [s])
+json_to_md_dict_to_table(json_input, indent) = res {
+  key_lens := [count(k) | some k, _ in json_input]
+  body_in := [ sprintf("| %v | %v |", [k, v]) | some k, v in json_input ]
+  body := concat("\n", body_in)
+  res := sprintf("%s", [body])
+}
+
+json_to_md_dict_to_row(json_input, keys, indent) = res {
+  # Works for json_input[v] as strings, does not work for int
+  row := concat(" | ", [ json_input[v] | v = keys[k]])
+  res := sprintf("| %s |", [row])
+}
+
+json_to_md_array_of_dict_to_table(json_input, keys, indent) = res {
+  header := sprintf("| %s |", [concat(" | ", keys)])
+  delims := { i: " --- " | some i in numbers.range(1, count(keys)) }
+  delim := sprintf("|%s|", [concat("|", [d | some d in delims])])
+
+  records := [ s |
+    some r in json_input
+    s := json_to_md_dict_to_row(r, keys, indent)
+  ]
+
+  body := concat("\n", records)
+  res := concat("\n", [header, delim, body])
+}
+
+array_group_by(input_array, fields) = res {
+  path := concat(".", fields)
+  res := [ r |
+    r := input_array[_][path]
+  ]
 }
 
 state_diff(current, field, configured) = diff {

@@ -17,7 +17,13 @@ keys := utils.array_subtraction(user_keys, data.github.state.ssh_keys.keys)
 expired[k.id] = v {
   k := responses[_]
   utils.is_expired(k, data.github.state.ssh_keys.expiration)
-  v := json.filter(k, ["created_at"])
+  v := json.filter(k, ["id", "created_at", "title", "url"])
+}
+
+all_keys[k.id] = v {
+  k := responses[_]
+  k.key == keys[_]
+  v := json.filter(k, ["id", "created_at", "title", "url"])
 }
 
 keys_findings = v {
@@ -34,6 +40,7 @@ keys_findings = v {
 }
 
 keys_findings = v {
+  count(keys) > 0
   valid := count(keys) - count(expired)
   valid == 0
   v := "(i) You have no valid SSH keys."
@@ -66,29 +73,96 @@ eval = v {
   }
 }
 
-findings := concat("\n", [keys_findings, expired_findings])
+findings := concat("\n\n", [keys_findings, expired_findings])
+
+overview_section := concat("\n", [
+  "SSH keys are an authentication tool that enables tools like git to access repositories you have access to.",
+  "In GitHub personal and organizational accounts, SSH keys are managed by the user.",
+  "Thus the following are findings regarding *your* SSH keys.",
+])
+
+recommendation_section := concat("\n", [
+  "Your SSH keys allow full access to all the repositories over SSH.",
+  "We recommend you review your SSH keys regularly; ensure you are familiar with the keys and their use.",
+  "In case of an upcoming expiration date - ensure you replace the keys on time.",
+  "SSH keys generation is done via the following link: <https://github.com/settings/keys>.",
+])
 
 report := [
   "## SSH Keys",
   "### Motivation",
-  "SSH keys are an authentication tool that enables tools like git to access repositories you have access to.",
-  "In GitHub personal and organizational accounts, SSH keys are managed by the user.",
-  "Thus the following are findings regarding *your* SSH keys.",
+  "%s",
   "",
 
   "### Key Findings",
   "%s",
   "",
+  "See [below](#ssh-keys-1) for a detailed report.",
+  "",
 
   "### Our Recommendation",
-  "Your SSH keys allow full access to all the repositories over SSH.",
-  "We recommend you review your SSH keys regularly; ensure you are familiar with the keys and their use.",
-  "In case of an upcoming expiration date - ensure you replace the keys on time.",
-  "SSH keys generation is done via the following link: <https://github.com/settings/keys>",
+  "%s",
   "",
 ]
 
 overview_report := v {
   c_report := concat("\n", report)
-  v := sprintf(c_report, [findings])
+  v := sprintf(c_report, [overview_section, findings, recommendation_section])
+}
+
+d_report := [
+  "## SSH Keys",
+  "%s",
+  "%s",
+  "",
+  "Go [back](#ssh-keys) to the overview report.",
+  "",
+
+  "<b>Expired</b>",
+  "%s",
+  "",
+
+  "<b>All</b>",
+  "%s",
+  ""
+]
+
+expired_details = v {
+  count(expired) == 0
+  v := "None"
+}
+
+expired_details = v {
+  count(expired) > 0
+  v_data := [ q |
+    k := expired[_]
+    q := { "Key": k.title, "Creation time": k.created_at,
+      "Link": k.url }
+  ]
+
+  expired_details_keys := ["Key", "Creation time", "Link"]
+  v := sprintf("%s", [utils.json_to_md_array_of_dict_to_table(v_data,
+    expired_details_keys, "")])
+}
+
+non_empty_details = v {
+  count(keys) == 0
+  v := "None"
+}
+
+non_empty_details = v {
+  count(keys) > 0
+  v_data := [ q |
+    some k in all_keys
+    q := { "Key": k.title, "Creation time": k.created_at,
+      "Link": k.url }
+  ]
+
+  non_empty_details_keys := ["Key", "Creation time", "Link"]
+  v := sprintf("%s", [utils.json_to_md_array_of_dict_to_table(v_data,
+    non_empty_details_keys, "")])
+}
+
+detailed_report := v {
+  v := sprintf(concat("\n", d_report), [overview_section, recommendation_section, expired_details, non_empty_details])
 }

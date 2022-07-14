@@ -18,6 +18,8 @@ RUN apk --no-cache add curl &&\
 
 COPY github /opt/opa/github
 
+VOLUME /var/opt/opa/
+
 USER opa
 
 ENTRYPOINT ["/opt/opa/docker-entrypoint.sh"]

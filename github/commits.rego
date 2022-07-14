@@ -51,7 +51,7 @@ findings = v {
 findings = v {
   count(commits_unverified) == 0
   count(commits) == 0
-  v := "(i) no data is fetched. The module needs configuration."
+  v := "(i) no data was fetched. The module needs configuration. Add the configuration section to the input file: 'commits': { '<owner/repo>': 'allow_unverified': [], ''history: [] }"
 }
 
 findings = v {
@@ -65,26 +65,78 @@ findings = v {
   v := sprintf(c_findings, [count(commits_unverified)])
 }
 
-report := [
-  "## Signed Commits",
-  "### Motivation",
+overview_section := concat("\n", [
   "Signing commits prevents unauthorized people from committing code into your repositories.",
   "In case you have not deployed appropriate branch protection rules,",
   "the following findings display the signing status of individual commits.",
+])
+
+recommendation_section := concat("\n", [
+  "You should either configure branch protection rules to enforce signed commits, or require developers to sign their commits.",
+  "Instructions for configuring your local git installation to sign commits to work with GitHub can be found here:",
+  "<https://docs.github.com/en/authentication/managing-commit-signature-verification/signing-commits>",
+])
+
+report := [
+  "## Signed Commits",
+  "### Motivation",
+  "%s",
   "",
 
   "### Key Findings",
   "%s",
   "",
+  "See [below](#signed-commits-1) for a detailed report.",
+  "",
 
   "### Our Recommendation",
-  "You should either configure branch protection rules to enforce signed commits, or require developers to sign their commits.",
-  "Instructions for configuring your local git installation to sign commits to work with GitHub can be found here:",
-  "<https://docs.github.com/en/authentication/managing-commit-signature-verification/signing-commits>",
+  "%s",
   "",
 ]
 
 overview_report := v {
   c_report := concat("\n", report)
-  v := sprintf(c_report, [findings])
+  v := sprintf(c_report, [overview_section, findings, recommendation_section])
+}
+
+d_report := [
+  "## Signed Commits",
+  "%s",
+  "%s",
+  "",
+  "Go [back](#signed-commits) to the overview report.",
+  "",
+
+  "<details open>",
+  "<summary> <b>Unverified Commits</b> </summary>",
+  "",
+  "%s",
+  "</details>",
+  "",
+]
+
+unverified_commits_data = { repo: result |
+  some repo, repo_commits in commits_unverified
+  result := [ x |
+    c := repo_commits[_]
+
+    url := sprintf("https://github.com/%s/commit/%s", [repo, c.sha])
+    f_url := sprintf("[%s](<%s>)", [c.sha, url])
+
+    x := { "Author": c.author, "Message": c.message, "Commit": f_url }
+  ]
+}
+
+unverified_commits_details := v {
+  count(commits_unverified) > 0
+
+  table_keys := ["Author", "Message", "Commit"]
+  tables := { repo:
+    utils.json_to_md_array_of_dict_to_table(unverified_commits_data[repo], table_keys, "") }
+
+  v := utils.json_to_md_dict(tables, ":\n\n", "  ")
+}
+
+detailed_report := v {
+  v := sprintf(concat("\n", d_report), [overview_section, recommendation_section, unverified_commits_details])
 }

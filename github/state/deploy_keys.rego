@@ -6,5 +6,3 @@ expiration := input.deploy_keys.expiration
 
 default keys := {}
 keys := input.deploy_keys.keys
-
-

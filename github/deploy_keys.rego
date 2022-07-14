@@ -29,7 +29,7 @@ non_empty_keys[x] = keys[x] {
 expired[k.id] = v {
   k := successes[_][_]
   utils.is_expired(k, data.github.state.deploy_keys.expiration)
-  v := json.filter(k, ["created_at"])
+  v := json.filter(k, ["id", "created_at"])
 }
 
 non_empty_findings = v {
@@ -67,55 +67,76 @@ expired_findings = v {
 
 eval = v {
   merged_responses := utils.merge(responses, data.github.repos.responses)
-  findings := concat("\n", [non_empty_findings, expired_findings])
   v := { "state": {"expired": expired, "keys": non_empty_keys},
          "processing_errors": { k: v | some k; v := merged_responses[k]; utils.is_error(v) },
   }
 }
 
-findings := concat("\n", [non_empty_findings, expired_findings])
+findings := concat("\n\n", [non_empty_findings, expired_findings])
 
-report := [
-  "## Deploy Keys",
-  "### Motivation",
+overview_section := concat("\n", [
   "Deploy keys are an authentication tool to enable access to repositories.",
   "Manage your deploy keys to ensure you have not left keys that can be wrongfully used.",
   "GitHub’s explanation about deploy keys can be found here:",
   "<https://docs.github.com/en/developers/overview/managing-deploy-keys#deploy-keys>",
   "",
+])
+
+recommendation_section := concat("\n", [
+  "Deploy keys are SSH keys assigned to each repository that allow reading and (optional) writing to private repositories.",
+  "We recommend you review your SSH keys regularly; ensure you are familiar with the keys and their use.",
+  "In case of an upcoming expiration date - ensure you replace the keys on time.",
+])
+
+report := [
+  "## Deploy Keys",
+  "### Motivation",
+  "%s",
+  "",
 
   "### Key Findings",
   "%s",
   "",
-  "See [below][#deploy_keys_details] for a detailed report.",
+  "See [below](#deploy-keys-1) for a detailed report.",
   "",
 
   "### Our Recommendation",
-  "Deploy keys are SSH keys assigned to each repository that allow reading and (optional) writing to private repositories.",
-  "We recommend you review your SSH keys regularly; ensure you are familiar with the keys and their use.",
-  "In case of an upcoming expiration date - ensure you replace the keys on time.",
-  "Deploy keys can be managed at the following links:",
   "%s",
+  "Deploy keys can be managed at the following links:",
+  "<details>",
+  "<summary>Click to expand</summary>",
+  "",
+  "%s",
+  "</details>",
   "",
 ]
 
 settings_urls := { v |
-  some k, r in data.github.repos.repos
+  some x, _ in non_empty_keys
+  r := data.github.repos.repos[x]
   v := sprintf("<%s>", [concat("/", [r.html_url, "settings", "keys"])])
 }
 
 overview_report := v {
   c_report := concat("\n", report)
-  v := sprintf(c_report, [findings, utils.json_to_md_list(settings_urls, "  ")])
+  v := sprintf(c_report, [overview_section, findings, recommendation_section, utils.json_to_md_list(settings_urls, "  ")])
 }
 
 d_report := [
-  "## Deploy Keys {#deploy_keys_details}",
-  "### Expired",
+  "## Deploy Keys",
+  "%s",
+  "%s",
+  "",
+  "Go [back](#deploy-keys) to the overview report.",
+  "",
+
+  "<b>Expired</b>",
+  "",
   "%s",
   "",
 
-  "### All",
+  "<b>All</b>",
+  "",
   "%s",
   ""
 ]
@@ -141,5 +162,5 @@ non_empty_details = v {
 }
 
 detailed_report := v {
-  v := sprintf(concat("\n", d_report), [expired_details, non_empty_details])
+  v := sprintf(concat("\n", d_report), [overview_section, recommendation_section, expired_details, non_empty_details])
 }

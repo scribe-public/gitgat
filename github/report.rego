@@ -27,9 +27,9 @@ gh_overview_modules["org"] := ["repos", "tfa", "admins", "teams", "collaborators
 
 gh_overview_modules["user"] := ["repos", "tfa", "admins", "teams", "collaborators", "branches", "commits", "deploy_keys", "ssh_keys", "files",]
 
-gh_detailed_modules["org"] := ["branches", "deploy_keys"]
+gh_detailed_modules["org"] := ["repos", "tfa", "admins", "teams", "collaborators", "branches", "commits", "deploy_keys"]
 
-gh_detailed_modules["user"] := ["branches", "deploy_keys"]
+gh_detailed_modules["user"] := ["repos", "tfa", "admins", "teams", "collaborators", "branches", "commits", "deploy_keys", "ssh_keys"]
 
 gh_intro["org"] := v {
   orgs := utils.json_to_md_list(input.organizations, "  ")
@@ -51,5 +51,16 @@ f_report := v {
 
 print_report = v {
   print(f_report)
+  v := 1
+}
+
+gh_update_modules["user"] := ["token", "admins", "tfa"]
+
+f_update := v {
+  v := { m: data.github[m].update | some m in gh_update_modules[rule_set] }
+}
+
+print_update = v {
+  print(f_update)
   v := 1
 }

@@ -79,7 +79,7 @@ report := [
   "",
 
   "### Our Recommendation",
-  "Configure the rule and regularly track access to sensitive files.",  
+  "Configure the rule and regularly track access to sensitive files.",
   "",
 ]
 

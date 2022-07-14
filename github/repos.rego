@@ -34,8 +34,18 @@ repos[k] = v {
      "owner/login",
      "owner/type",
      "full_name",
+     "name",
      "commits_url",
      "html_url"])
+}
+
+owners := { r.owner.login |
+  some r in repos
+}
+
+repos_per_owner[x] = v {
+  some x in owners
+  v := [ r.full_name | some r in repos; r.owner.login == x ]
 }
 
 private_repos := [ k |
@@ -47,30 +57,90 @@ public_repos := [ k.full_name |
   not k.full_name in private_repos
 ]
 
+private_repos_per_owner[x] = v {
+  some x, x_repos in repos_per_owner
+  v := [ r | some r in private_repos; some y in x_repos; r == y ]
+}
+
+public_repos_per_owner[x] = v {
+  some x, x_repos in repos_per_owner
+  v := [ r | some r in public_repos; some y in x_repos; r == y ]
+}
+
+overview_section := concat("\n", [
+  "Public GitHub repositories enable open source collaboration.",
+  "But mistakenly exposing a private repository as public",
+  "may leak information and allow unwanted people access to your repositories.",
+])
+
+recommendation_section := concat("\n", [
+  "Regularly review your repositories to ensure private repositories have not been made public.",
+])
+
 report := [
   "## Repository Public Visibility and Access",
   "### Motivation",
-  "Public GitHub repositories enable open source collaboration. But mistakenly exposing a private repository as public may leak information and allow unwanted people access to your repositories.",
+  "%s",
   "",
 
   "### Key Findings",
   "%s",
   "",
+  "See [below](#repository-public-visibility-and-access-1) for a detailed report.",
+  "",
 
   "### Our Recommendation",
-  "Regularly review your repositories to ensure private repositories have not been made public. Managing repositories visibility can be done through the following links:",
   "%s",
+  "",
+  "Managing repositories visibility can be done through the following links:",
+  "<details>",
+  "<summary>Click to expand</summary>",
+  "",
+  "%s",
+  "</details>",
   "",
 ]
 
-findings = v {
-  count(public_repos) == 0
+findings_per_owner[x] = v {
+  count(public_repos_per_owner[x]) == 0
   v := "(v) no public repositories"
 }
 
+# format_strings := {
+#   { 1:
+#     { 1: "(i) %d out of %d repository is public" },
+#     {
+# format_string[num_public_repos][total_repos]
+
+findings_per_owner[x] = v {
+  num_public_repos := count(public_repos_per_owner[x])
+  num_public_repos == 1
+  total_repos := num_public_repos + count(private_repos_per_owner[x])
+  total_repos > 1
+  v := sprintf("(i) %d out of %d repositories is public", [num_public_repos, total_repos])
+}
+
+findings_per_owner[x] = v {
+  num_public_repos := count(public_repos_per_owner[x])
+  num_public_repos == 1
+  total_repos := num_public_repos + count(private_repos_per_owner[x])
+  total_repos == 1
+  v := sprintf("(i) %d out of %d repository is public", [num_public_repos, total_repos])
+}
+
+findings_per_owner[x] = v {
+  num_public_repos := count(public_repos_per_owner[x])
+  num_public_repos > 1
+  total_repos := num_public_repos + count(private_repos_per_owner[x])
+  total_repos > 1
+  v := sprintf("(i) %d out of %d repositories are public", [num_public_repos, total_repos])
+}
+
 findings = v {
-  total_repos := count(public_repos) + count(private_repos)
-  v := sprintf("(i) %d out of %d repositories are public", [count(public_repos), total_repos])
+  header := "| Owner | Findings |"
+  delim := "| --- | --- |"
+  body := utils.json_to_md_dict_to_table(findings_per_owner, "  ")
+  v := concat("\n", [header, delim, body])
 }
 
 settings_urls := { v |
@@ -81,5 +151,47 @@ settings_urls := { v |
 overview_report := v {
   c_report := concat("\n", report)
   urls := utils.json_to_md_list(settings_urls, "  ")
-  v := sprintf(c_report, [findings, urls])
+  v := sprintf(c_report, [overview_section, findings, recommendation_section, urls])
+}
+
+d_report := [
+  "## Repository Public Visibility and Access",
+  "%s",
+  "%s",
+  "",
+  "Go [back](#repository-public-visibility-and-access) to the overview report.",
+  "",
+
+  "<details open>",
+  "<summary> <b>Repositories Visibility Settings (for Public Repositories)</b> </summary>",
+  "",
+  "%s",
+  "</details>",
+  "",
+]
+
+settings_details = v {
+  count(settings_urls) == 0
+  v := "No public repositories."
+}
+
+settings_details = v {
+  count(settings_urls) > 0
+  v_data := [ q |
+    r := repos[x]
+    not r.private
+    url := concat("/", [r.html_url, "settings"])
+    f_url := sprintf("[Settings](<%s>)", [url])
+    q := { "Owner": r.owner.login, "Repository": r.name,
+      "Link": f_url }
+  ]
+
+  settings_details_keys := ["Owner", "Repository", "Link"]
+  v := sprintf("%s", [utils.json_to_md_array_of_dict_to_table(v_data,
+    settings_details_keys, "")])
+}
+
+detailed_report := v {
+  v := sprintf(concat("\n", d_report),
+    [overview_section, recommendation_section, settings_details])
 }
