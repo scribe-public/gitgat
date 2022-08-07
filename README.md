@@ -5,9 +5,10 @@
 # Source control system security posture
 SCM (Source Control Management) security is of high importance as it serves as an entry point to the whole CI/CD pipeline. This repository contains policies that verify SCM (currently GitHub's) organization/repositories/user accounts security. The policies are evaluated using [Open Policy Agent (OPA)](https://openpolicyagent.org).
 
+
 There are different sets of policies depending on which account is being evaluated. **Most policies are only relevant for organization owners**. See the rulesets section bellow.
 
-The policies are evaluated against a certain state. When executed for the first time, the state is empty. The returned data should be reviewed and the security posture should be manually evaluated (with recommendations from each module). If the state is approved it should be added to the input data, so that the next evaluation of policies tracks the changes of the state. More information about the state configurable for each module is available in each module's corresponding section.
+The policies are evaluated against a certain state. When executed for the first time, the state is empty. The returned data should be reviewed, and the security posture should be manually evaluated (with recommendations from each module). If the state is approved, it should be added to the input data, so that the next evaluation of policies tracks the changes of the state. More information about the state configurable for each module is available in each module's corresponding section.
 
 
 # Usage
@@ -46,15 +47,15 @@ Run the following to get the report as a JSON object:
 ```sh
 docker run -e GH_TOKEN scribesecurity/gitgat:latest data.gh.eval
 ```
-In order to run the report using the variables and state you have saved in the input.json file use this command:
+In order to run the report using the variables and state you have saved in the input.json file, use this command:
 ```sh
 docker run -e GH_TOKEN -v <full_path_to_directory_containing_input_file>:/var/opt/opa scribesecurity/gitgat:latest
 ```
-If you have already included the token in the input.json file you can shorten it to:
+If you have already included the token in the input.json file, you can shorten it to:
 ```sh
 docker run -v <full_path_to_directory_containing_input_file>:/var/opt/opa scribesecurity/gitgat:latest
 ```
-Note that the default report is the JSON version so if you want to get the Markdown file you need to spesify it as seen at the top of this section.
+Note that the default report is the JSON version, so if you want to get the Markdown file you need to specify it as seen at the top of this section.
 
 ## Run Using the OPA CLI
 
@@ -84,7 +85,7 @@ cp data/empty-input.json input.json
 ```
 Samples of configuration files can be found in here: <https://github.com/scribe-public/gitgat/blob/master/data/>.
 
-If you wish to add information or state to your `input.json` file you can refer to `data/sample_input.json`, for policies configuration and state management. Each ruleset is its own JSON section and the state information for each rule fits inside that segment. Make sure that the state information does not get pushed to the repository as it might contain sensitive data.
+If you wish to add information or state to your `input.json` file, you can refer to `data/sample_input.json`, for policies configuration and state management. Each rule set is its own JSON section, and the state information for each rule fits inside that segment. Make sure that the state information does not get pushed to the repository, as it might contain sensitive data.
 
 `sample_input.json` is **not** included in .gitignore, but `input.json` is.
 So it is recommended to use `input.json` as the input configuration file for OPA.
@@ -102,7 +103,7 @@ Create a report as a report as a gist in your GitHub account:
 cat input.json | sed "s/GH_TOKEN/$GH_TOKEN/" | opa eval -I -b github data.gh.post_gist
 ```
 
-Get a report as an md file:
+Get a report as a md file:
 ```sh
 cat input.json | sed "s/GH_TOKEN/$GH_TOKEN/" | opa eval -I -b github data.github.report.print_report 2> report.md
 ```
@@ -122,7 +123,7 @@ For example:
 ```sh
 cat input.json | sed "s/GH_TOKEN/$GH_TOKEN/" | opa eval -I -b github data.github.ssh_keys.eval
 ```
-You can find the different rule files under `data/github`. Each file is a single OPA rule. The file name is the rule name and that's the name you can use instead of the `<module>`.
+You can find the different rule files under `data/github`. Each file is a single OPA rule. The file name is the rule name, and that's the name you can use instead of the `<module>`.
 
 (Under development) Print the Markdown report to stdout:
 
@@ -139,8 +140,8 @@ cat input.json | sed "s/GH_TOKEN/$GH_TOKEN/" | opa eval -I -b github data.gh.pos
 
 
 ## Rule sets
-The evaluation can be run for three different rulesets.
-The ruleset is configured via `input.rule_set`:
+The evaluation can be run for three different rule sets.
+The rule set is configured via `input.rule_set`:
 
   * "user" - evaluates rules from a single user perspective.
   * "org" - evaluates rules from an organization perspective.
@@ -165,7 +166,7 @@ Additional information about modules is available in corresponding eval rules de
 
   Required permissions:
    * read:org - note, that only organization owners can get the list of users with 2 factor authentication disabled
-   * read:user - to get the list of organizations the user belongs to (when evaluating the *user* ruleset)
+   * read:user - to get the list of organizations the user belongs to (when evaluating the *user* rule set)
 
   Configuration parameters:
 
@@ -181,7 +182,7 @@ Additional information about modules is available in corresponding eval rules de
 
 
 ## SSH keys
-  Developers can use SSH keys to access the repositories. A leaked SSH key gives an attacker access to the repository without the need to acquire a password. To mitigate the risk, it is advised to rotate SSH keys periodically and review configured SSH keys. The module is supported in the user ruleset as organization owners do not have access to SSH keys metadata.
+  Developers can use SSH keys to access the repositories. A leaked SSH key gives an attacker access to the repository without the need to acquire a password. To mitigate the risk, it is advised to rotate SSH keys periodically and review configured SSH keys. The module is supported in the user rule set as organization owners do not have access to SSH keys metadata.
   Module *ssh_keys* checks for expired and newly added SSH keys.
 
   Required permissions:
@@ -238,7 +239,7 @@ Additional information about modules is available in corresponding eval rules de
 
 ## Admins
   Organization administrators have full control over the organization configuration and its repositories. The list of administrator users should be kept up-to-date.
-  Module *admins* monitors the list of admin users.
+  Module *admins* monitor the list of admin users.
 
   Required permissions:
 
@@ -255,7 +256,7 @@ Additional information about modules is available in corresponding eval rules de
 
 ## Branches
   Branch protection is a set of configuration options to authorize commits that can be pushed to a branch. For more information, refer to SCM documentation.
-  Module *branches* monitors the branch protection configuration for a repository.
+  Module *branches* monitor the branch protection configuration for a repository.
 
   Required permissions:
 
@@ -274,7 +275,7 @@ Additional information about modules is available in corresponding eval rules de
 
 ## Teams
   Teams configuration is a convenient mechanism to organize users into groups and set permissions on a per team basis.
-  Module *teams* monitors the teams members and the permissions of teams in repositories.
+  Module *teams* monitor the teams members and the permissions of teams in repositories.
 
   Required permissions:
 
