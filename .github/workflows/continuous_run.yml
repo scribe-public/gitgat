@@ -18,7 +18,7 @@ jobs:
     
     # run gensbom
     - name: run GitGat
-      run: docker run -e "$GH_SECRET" -v $(pwd):/var/opt/opa scribesecurity/gitgat:latest data.github.report.print_report 2> report.md
+      run: docker run -e "$GITHUB_SECRET"  scribesecurity/gitgat:latest data.github.report.print_report 2> report.md
       
     # Upload report to artifacts
     - name: uplaod report.md as artifact
