@@ -10,7 +10,7 @@ jobs:
   run:
     runs-on: ubuntu-latest
     env: 
-      GITHUB_SECRET : ${{secrets.GITHUB_SECRET}}
+      GITHUB_SECRET : ${{secrets.GH_SECRET}}
     steps:
     
     # checkout in order to have state
