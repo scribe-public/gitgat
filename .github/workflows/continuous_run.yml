@@ -18,7 +18,7 @@ jobs:
     
     # run gitgat
     - name: run GitGat
-      run: docker run -e "$GITHUB_SECRET" scribesecurity/gitgat:latest  data.gh.post_gist
+      run: docker run -e "$GITHUB_SECRET" $(pwd):/var/opt/opa scribesecurity/gitgat:latest  data.gh.post_gist
       
       
     
