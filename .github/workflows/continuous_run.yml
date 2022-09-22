@@ -24,11 +24,20 @@ jobs:
         docker run -e "$GITHUB_SECRET" -v $(pwd):/var/opt/opa scribesecurity/gitgat:latest data.github.report.print_report 2> report.md
       
       
-    - name: upload artifact
-      uses: actions/upload-artifact@v3
-      with:
-          name: gitgat report
-          path: report.md
+#     - name: upload artifact
+#       uses: actions/upload-artifact@v3
+#       with:
+#           name: gitgat report
+#           path: report.md
+
+    # Push updates to repo
+    - name: Push updated report.md to repo
+      run: |
+          git config --global user.name "work flow (via get_latest workflow)"
+          git config --global user.email "my_mail@somewhere.com"
+          git add report.md
+          git commit -m "report.md"
+          git push
   
       
       
