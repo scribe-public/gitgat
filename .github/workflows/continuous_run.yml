@@ -1,8 +1,9 @@
 name: continuously run gitgat
 
 on:
-  schedule:
-  - cron: "0 23 * * *"
+  #remove the following commented lines to enable continuous running
+  #schedule:
+  #- cron: "0 23 * * *"
   
   workflow_dispatch:
 
