@@ -19,7 +19,10 @@ jobs:
     
     # run gitgat
     - name: run GitGat
-      run: docker run -e "$GITHUB_SECRET" -v $(pwd):/var/opt/opa scribesecurity/gitgat:latest data.github.report.print_report 2> report.md
+      run: |
+        docker pull scribesecurity/gitgat:latest
+        docker run -e "$GITHUB_SECRET" -v $(pwd):/var/opt/opa scribesecurity/gitgat:latest data.github.report.print_report 2> report.md
+      
       
     - name: upload artifact
       uses: actions/upload-artifact@v3
