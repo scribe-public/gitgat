@@ -24,12 +24,16 @@ non_empty_admin_members[x] = admin_members[x] {
   count(admin_members[x]) > 0
 }
 
-more_than_two_admin_members[x] = admin_members[x] {
+more_or_less_than_two_admin_members[x] = admin_members[x] {
   count(admin_members[x]) > 2
 }
 
+more_or_less_than_two_admin_members[x] = admin_members[x] {
+  count(admin_members[x]) == 1
+}
+
 members_findings = v {
-  v := { x: count(v) | some x, v in more_than_two_admin_members }
+  v := { x: count(v) | some x, v in more_or_less_than_two_admin_members }
 }
 
 overview_section := concat("\n", [
@@ -42,29 +46,30 @@ recommendation_section := concat("\n", [
   "Review the permissions and limit the number of users with admin permissions, to the minimum required.",
 ])
 
-report := [
-  "## Admin Permissions",
+module_title = "## Admin Permissions"
+overview_report := concat("\n", [
+  module_title,
   "### Motivation",
-  "%s",
+  overview_section,
   "",
 
   "### Key Findings",
-  "The following organizations have more than 2 admin members:",
-  "%s",
+  "The following organizations do not have 2 admin members:",
+  findings,
   "",
   "See [below](#admin-permissions-1) for a detailed report.",
   "",
 
   "### Our Recommendation",
-  "%s",
+  recommendation_section,
   "You can limit the administrative permissions of members at the following links:",
   "<details>",
   "<summary>Click to expand</summary>",
   "",
-  "%s",
+  utils.json_to_md_list(settings_urls, "  "),
   "</details>",
   "",
-]
+])
 
 findings = v {
   count(members_findings) > 0
@@ -80,16 +85,10 @@ settings_urls := { v |
   v := sprintf("<%s>", [concat("/", ["https://github.com/organizations", k, "settings", "member_privileges"])])
 }
 
-overview_report := v {
-  c_report := concat("\n", report)
-  urls := utils.json_to_md_list(settings_urls, "  ")
-  v := sprintf(c_report, [overview_section, findings, recommendation_section, urls])
-}
-
-d_report := [
-  "## Admin Permissions",
-  "%s",
-  "%s",
+detailed_report := concat("\n", [
+  module_title,
+  overview_section,
+  recommendation_section,
   "",
   "Go [back](#admin-permissions) to the overview report.",
   "",
@@ -97,10 +96,10 @@ d_report := [
   "<details open>",
   "<summary> <b>Admin Members</b> </summary>",
   "",
-  "%s",
+  admin_details,
   "</details>",
   "",
-]
+])
 
 admin_details = v {
   count(non_empty_admin_members) == 0
@@ -110,10 +109,6 @@ admin_details = v {
 admin_details = v {
   count(non_empty_admin_members) > 0
   v := utils.json_to_md_dict_of_lists(non_empty_admin_members, "  ")
-}
-
-detailed_report := v {
-  v := sprintf(concat("\n", d_report), [overview_section, recommendation_section, admin_details])
 }
 
 update := v {

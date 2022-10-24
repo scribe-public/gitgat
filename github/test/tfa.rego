@@ -1,4 +1,4 @@
-package test.tfa
+package github.test.tfa
 
 import future.keywords.in
 

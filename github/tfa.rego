@@ -84,28 +84,29 @@ recommendation_section := concat("\n", [
   "Configure your GitHub organizations to enforce 2 factor authentication on all organizations’ users.",
 ])
 
-report := [
-  "## Two Factor Authentication",
+module_title := "## Two Factor Authentication"
+overview_report := concat("\n", [
+  module_title,
   "### Motivation",
-  "%s",
+  overview_section,
   "",
 
   "### Key Findings",
-  "%s",
+  findings,
   "",
   "See [below](#two-factor-authentication-1) for a detailed report.",
   "",
 
   "### Our Recommendation",
-  "%s",
+  recommendation_section,
   "That can be done from the following link(s):",
   "<details>",
   "<summary>Click to expand</summary>",
   "",
-  "%s",
+  utils.json_to_md_list(settings_urls, "  "),
   "</details>",
   "",
-]
+])
 
 settings_urls := { v |
   some k in unenforced_orgs
@@ -114,16 +115,10 @@ settings_urls := { v |
 
 findings := concat("\n\n", [members_findings, unenforced_findings])
 
-overview_report := v {
-  c_report := concat("\n", report)
-  urls := utils.json_to_md_list(settings_urls, "  ")
-  v := sprintf(c_report, [overview_section, findings, recommendation_section, urls])
-}
-
-d_report := [
-  "## Two Factor Authentication",
-  "%s",
-  "%s",
+detailed_report := concat("\n", [
+  module_title,
+  overview_section,
+  recommendation_section,
   "",
   "Go [back](#two-factor-authentication) to the overview report.",
   "",
@@ -131,17 +126,17 @@ d_report := [
   "<details open>",
   "<summary> <b>Two Factor Disabled Members</b> </summary>",
   "",
-  "%s",
+  disabled_details,
   "</details>",
   "",
 
   "<details open>",
   "<summary> <b>Two Factor Unenforced Organizations</b> </summary>",
   "",
-  "%s",
+  unenforced_details,
   "</details>",
   "",
-]
+])
 
 disabled_details = v {
   count(non_empty_tfa_disabled_members) == 0
@@ -169,10 +164,6 @@ unenforced_details = v {
   delim := "| --- | --- |"
   body := utils.json_to_md_dict_to_table(table, "  ")
   v := concat("\n", [header, delim, body])
-}
-
-detailed_report := v {
-  v := sprintf(concat("\n", d_report), [overview_section, recommendation_section, disabled_details, unenforced_details])
 }
 
 update := v {

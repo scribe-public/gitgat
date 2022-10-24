@@ -1,4 +1,4 @@
-package test.utils
+package github.test.utils
 
 import future.keywords.in
 

@@ -1,3 +1,6 @@
 {
-    "rule_set": "user"
+    "github": {
+	"rule_set": "user",
+	"debug_modules": [ "files" ]
+    }
 }

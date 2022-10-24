@@ -1,4 +1,4 @@
-package test.hooks
+package github.test.hooks
 
 import future.keywords.in
 

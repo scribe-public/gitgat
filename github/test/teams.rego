@@ -1,4 +1,4 @@
-package test.teams
+package github.test.teams
 
 import future.keywords.in
 

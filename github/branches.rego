@@ -124,43 +124,39 @@ recommendation_section := concat("\n", [
   "Branch protection rules for these branches should include requiring pull-request-reviews, signed commits, and not allowing deletions.",
 ])
 
-report := [
-  "## Branch Protection",
+module_title := "## Branch Protection"
+overview_report := concat("\n", [
+  module_title,
   "### Motivation",
-  "%s",
+  overview_section,
   "",
 
   "### Key Findings",
-  "%s",
+  findings,
   "",
   "See [below](#branch-protection-1) for a detailed report.",
   "",
 
   "### Our Recommendation",
-  "%s",
+  recommendation_section,
   "This can be done from the following links:",
   "<details>",
   "<summary>Click to expand</summary>",
   "",
-  "%s",
+  utils.json_to_md_list(settings_urls, "  "),
   "</details>",
   "",
-]
+])
 
 settings_urls := { v |
   some k, r in data.github.repos.repos
   v := sprintf("<%s>", [concat("/", [r.html_url, "settings", "branches"])])
 }
 
-overview_report := v {
-  c_report := concat("\n", report)
-  v := sprintf(c_report, [overview_section, findings, recommendation_section, utils.json_to_md_list(settings_urls, "  ")])
-}
-
-d_report := [
-  "## Branch Protection",
-  "%s",
-  "%s",
+detailed_report := concat("\n", [
+  module_title,
+  overview_section,
+  recommendation_section,
   "",
   "Go [back](#branch-protection) to the overview report.",
   "",
@@ -168,17 +164,17 @@ d_report := [
   "<details open>",
   "<summary> <b>Branch Protection</b> </summary>",
   "",
-  "%s",
+  protection_details,
   "</details>",
   "",
 
   "<details open>",
   "<summary> <b>Unprotected Branches</b> </summary>",
   "",
-  "%s",
+  unprotected_details,
   "</details>",
   "",
-]
+])
 
 create_table_row(k, v, r, e) = res {
   res := { "Setting": k, "Value": v, "Recommended": r, "Explanation": e }
@@ -251,6 +247,64 @@ protection_details = v {
   v := utils.json_to_md_dict(tables, ":\n\n", "  ")
 }
 
-detailed_report := v {
-  v := sprintf(concat("\n", d_report), [overview_section, recommendation_section, protection_details, unprotected_details])
+verified_history_rule := v {
+  v := {
+    "id": "GGS002",
+    "name": "SourceHistoryVerified",
+    "shortDescription": {
+      "text": "All commits are signed."
+    },
+    "fullDescription": {
+      "text": concat("\n", [
+        "Every change in the revision’s history has at least one strongly authenticated actor identity (author, uploader, reviewer, etc.) and timestamp. It must be clear which identities were verified, and those identities must use two-step verification or similar. (Exceptions noted below.)",
+        "",
+        "[First-parent history] In the case of a non-linear version control system, where a revision can have more than one parent, only the “first parent history” is in scope. In other words, when a feature branch is merged back into the main branch, only the merge itself is in scope.",
+	"",
+        "[Historical cutoff] There is some TBD exception to allow existing projects to meet SLSA 3/4 even if historical revisions were present in the history. Current thinking is that this could be either last N months or a platform attestation guaranteeing that future changes in the next N months will meet the requirements.",
+      ])
+    },
+    "messageStrings": {
+      "pass": {
+        "text": "Signed commits are requried by the branch protection rules."
+      },
+      "fail": {
+        "text": "Signed commits are NOT requried by the branch protection rules."
+      }
+    }
+  }
 }
+
+verified_history_result = v {
+  filtered_protection_data[input.slsa.protected_branch].required_signatures == true
+  v := {
+    "ruleId": verified_history_rule.id,
+    "level": "note",
+    "message": {
+      "id": "pass",
+    }
+  }
+}
+
+verified_history_result = v {
+  filtered_protection_data[input.slsa.protected_branch].required_signatures == false
+  v := {
+    "ruleId": verified_history_rule.id,
+    "level": "error",
+    "message": {
+      "id": "fail",
+    }
+  }
+}
+
+verified_history_result = v {
+  not utils.exists(filtered_protection_data, input.slsa.protected_branch)
+  v := {
+    "ruleId": verified_history_rule.id,
+    "level": "error",
+    "message": {
+      "id": "fail",
+    }
+  }
+}
+
+

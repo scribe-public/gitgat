@@ -1,4 +1,4 @@
-package test.branches
+package github.test.branches
 
 import future.keywords.in
 

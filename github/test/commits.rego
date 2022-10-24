@@ -1,4 +1,4 @@
-package test.commits
+package github.test.commits
 
 import future.keywords.in
 

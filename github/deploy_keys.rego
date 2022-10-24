@@ -32,6 +32,12 @@ expired[k.id] = v {
   v := json.filter(k, ["id", "created_at"])
 }
 
+all_keys[k.id] = v {
+  k := successes[_][_]
+  k.key == keys[_][_]
+  v := json.filter(k, ["id", "created_at", "title", "url"])
+}
+
 non_empty_findings = v {
   count(non_empty_keys) > 1
   c_findings := "(i) %d keys are configured for the repositories."
@@ -88,28 +94,29 @@ recommendation_section := concat("\n", [
   "In case of an upcoming expiration date - ensure you replace the keys on time.",
 ])
 
-report := [
-  "## Deploy Keys",
+module_title := "## Deploy Keys"
+overview_report := concat("\n", [
+  module_title,
   "### Motivation",
-  "%s",
+  overview_section,
   "",
 
   "### Key Findings",
-  "%s",
+  findings,
   "",
   "See [below](#deploy-keys-1) for a detailed report.",
   "",
 
   "### Our Recommendation",
-  "%s",
+  recommendation_section,
   "Deploy keys can be managed at the following links:",
   "<details>",
   "<summary>Click to expand</summary>",
   "",
-  "%s",
+  utils.json_to_md_list(settings_urls, "  "),
   "</details>",
   "",
-]
+])
 
 settings_urls := { v |
   some x, _ in non_empty_keys
@@ -117,29 +124,24 @@ settings_urls := { v |
   v := sprintf("<%s>", [concat("/", [r.html_url, "settings", "keys"])])
 }
 
-overview_report := v {
-  c_report := concat("\n", report)
-  v := sprintf(c_report, [overview_section, findings, recommendation_section, utils.json_to_md_list(settings_urls, "  ")])
-}
-
-d_report := [
-  "## Deploy Keys",
-  "%s",
-  "%s",
+detailed_report := concat("\n", [
+  module_title,
+  overview_section,
+  recommendation_section,
   "",
   "Go [back](#deploy-keys) to the overview report.",
   "",
 
   "<b>Expired</b>",
   "",
-  "%s",
+  expired_details,
   "",
 
   "<b>All</b>",
   "",
-  "%s",
+  non_empty_details,
   ""
-]
+])
 
 expired_details = v {
   count(expired) == 0
@@ -148,19 +150,36 @@ expired_details = v {
 
 expired_details = v {
   count(expired) > 0
-  v := utils.json_to_md_list(expired, "  ")
+  v_data := [ q |
+    k := expired[_]
+    q := { "Key": k.title, "Creation time": k.created_at,
+      "Link": k.url }
+  ]
+
+  expired_details_keys := ["Key", "Creation time", "Link"]
+  v := sprintf("%s", [utils.json_to_md_array_of_dict_to_table(v_data,
+    expired_details_keys, "")])
 }
 
 non_empty_details = v {
-  count(non_empty_keys) == 0
+  count(all_keys) == 0
   v := "None"
 }
 
 non_empty_details = v {
-  count(non_empty_keys) > 0
-  v := utils.json_to_md_dict_of_lists(non_empty_keys, "  ")
+  count(all_keys) > 0
+  v_data := [ q |
+    some k in all_keys
+    q := { "Key": k.title, "Creation time": k.created_at,
+      "Link": k.url }
+  ]
+
+  non_empty_details_keys := ["Key", "Creation time", "Link"]
+  v := sprintf("%s", [utils.json_to_md_array_of_dict_to_table(v_data,
+    non_empty_details_keys, "")])
 }
 
-detailed_report := v {
-  v := sprintf(concat("\n", d_report), [overview_section, recommendation_section, expired_details, non_empty_details])
+# See comment about update in admins.rego
+update := v {
+  v := { "keys": non_empty_keys, }
 }
