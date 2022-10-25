@@ -1,4 +1,4 @@
-package test.deploy_keys
+package github.test.deploy_keys
 
 import future.keywords.in
 

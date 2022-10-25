@@ -3,7 +3,7 @@ package github.repos
 import future.keywords.in
 import data.github.utils as utils
 
-rule_set := input.rule_set { utils.exists(input, "rule_set") } else := data.rule_set
+rule_set := input.rule_set { utils.exists(input, "rule_set") } else := data.github.rule_set
 
 orgs = data.github.orgs.orgs
 
@@ -194,4 +194,45 @@ settings_details = v {
 detailed_report := v {
   v := sprintf(concat("\n", d_report),
     [overview_section, recommendation_section, settings_details])
+}
+
+version_controlled_rule := v {
+  v := {
+    "id": "GGS001",
+    "name": "SourceVersionControlled",
+    "shortDescription": {
+      "text": "The code must be version-controlled."
+    },
+    "fullDescription": {
+      "text": concat("\n", [
+        "Every change to the source is tracked in a version control system that meets the following requirements:",
+        "",
+        "[Change history] There exists a record of the history of changes that went into the revision. Each change must contain: the identities of the uploader and reviewers (if any), timestamps of the reviews (if any) and submission, the change description/justification, the content of the change, and the parent revisions.",
+        "",
+        "[Immutable reference] There exists a way to indefinitely reference this particular, immutable revision. In git, this is the {repo URL + branch/tag/ref + commit ID}.",
+        "",
+        "Most popular version control system meet this requirement, such as git, Mercurial, Subversion, or Perforce.",
+        "",
+        "NOTE: This does NOT require that the code, uploader/reviewer identities, or change history be made public. Rather, some organization must attest to the fact that these requirements are met, and it is up to the consumer whether this attestation is sufficient.",
+      ])
+    },
+    "messageStrings": {
+      "pass": {
+        "text": "The code is version-controlled in {0}."
+      }
+    }
+  }
+}
+
+version_controlled_result := v {
+  v := {
+    "ruleId": version_controlled_rule.id,
+    "level": "note",
+    "message": {
+      "id": "pass",
+      "arguments": [
+        input.slsa.repository_url,
+      ]
+    }
+  }
 }

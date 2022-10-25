@@ -4,7 +4,7 @@ import future.keywords.in
 import data.github.utils as utils
 
 default rule_set := "user"
-rule_set := input.rule_set { utils.exists(input, "rule_set") } else := data.rule_set
+rule_set := input.rule_set { utils.exists(input, "rule_set") } else := data.github.rule_set
 
 user_response := v {
   rule_set == "user"

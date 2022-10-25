@@ -5,7 +5,7 @@ package gh
 import future.keywords.in
 import data.github.utils as utils
 
-rule_set := input.rule_set { utils.exists(input, "rule_set") } else := data.rule_set
+rule_set := input.rule_set { utils.exists(input, "rule_set") } else := data.github.rule_set
 
 gh_modules["user"] := [
   "tfa",

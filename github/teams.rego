@@ -159,28 +159,29 @@ recommendation_section := concat("\n", [
   "Remove team members who are not active or are no longer on the team.",
 ])
 
-report := [
-  "## Teams",
+module_title := "## Teams"
+overview_report := concat("\n", [
+  module_title,
   "### Motivation",
-  "%s",
+  overview_section,
   "",
 
   "### Key Findings",
-  "%s",
+  findings,
   "",
   "See [below](#teams-1) for a detailed report.",
   "",
 
   "### Our Recommendation",
-  "%s",
+  recommendation_section,
   "You can manage team permissions at the following links:",
   "<details>",
   "<summary>Click to expand</summary>",
   "",
-  "%s",
+  utils.json_to_md_list(access_settings_urls, "  "),
   "</details>",
   "",
-]
+])
 
 access_settings_urls := { v |
   # t is org/team/owner/repo
@@ -191,16 +192,10 @@ access_settings_urls := { v |
   v := sprintf("<%s>", [concat("/", [r.html_url, "settings", "access"])])
 }
 
-overview_report := v {
-  c_report := concat("\n", report)
-  urls := utils.json_to_md_list(access_settings_urls, "  ")
-  v := sprintf(c_report, [overview_section, findings, recommendation_section, urls])
-}
-
-d_report := [
-  "## Teams",
-  "%s",
-  "%s",
+detailed_report := concat("\n", [
+  module_title,
+  overview_section,
+  recommendation_section,
   "",
   "Go [back](#teams) to the overview report.",
   "",
@@ -208,17 +203,17 @@ d_report := [
   "<details open>",
   "<summary> <b>Members</b> </summary>",
   "",
-  "%s",
+  members_details,
   "</details>",
   "",
 
   "<details open>",
   "<summary> <b>Teams Permissions</b> </summary>",
   "",
-  "%s",
+  permissions_details,
   "</details>",
   "",
-]
+])
 
 members_details = v {
   count(non_empty_new_members) == 0
@@ -227,7 +222,16 @@ members_details = v {
 
 members_details = v {
   count(non_empty_new_members) > 0
-  v := utils.json_to_md_dict_of_lists(non_empty_new_members, "  ")
+
+  members_with_links := { u: ms |
+    ms = non_empty_new_members[k]
+    o := split(k, "/")[0]
+    t := split(k, "/")[1]
+    u := sprintf("[%s](<%s>)", [k, concat("/", ["https://github.com/orgs",
+      o, "teams", t, "members"])])
+  }
+
+  v := utils.json_to_md_dict_of_lists(members_with_links, "  ")
 }
 
 permissions_details = v {
@@ -238,8 +242,4 @@ permissions_details = v {
 permissions_details = v {
   count(non_empty_permissions) > 0
   v := utils.json_to_md_dict_of_dicts(non_empty_permissions, ":", "  ")
-}
-
-detailed_report := v {
-  v := sprintf(concat("\n", d_report), [overview_section, recommendation_section, members_details, permissions_details])
 }

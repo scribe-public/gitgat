@@ -88,43 +88,39 @@ recommendation_section := concat("\n", [
   "Regularly review the collaborators of your repositories, and block users that are not collaborators anymore.",
 ])
 
-report := [
-  "## Collaborators",
+module_title := "## Collaborators"
+overview_report := concat("\n", [
+  module_title,
   "### Motivation",
-  "%s",
+  overview_section,
   "",
 
   "### Key Findings",
-  "%s",
+  findings,
   "",
   "See [below](#collaborators-1) for a detailed report.",
   "",
 
   "### Our Recommendation",
-  "%s",
+  recommendation_section,
   "Blocking members is done through the following links:",
   "<details>",
   "<summary>Click to expand</summary>",
   "",
-  "%s",
+  utils.json_to_md_list(settings_urls, "  "),
   "</details>",
   "",
-]
+])
 
 settings_urls := { v |
-  some k, r in orgs
-  v := sprintf("<%s>", [concat("/", ["https://github.com/organizations", r.login, "settings", "member_privileges"])])
+  some repo, _ in non_empty_collaborators
+  v := sprintf("<%s>", [concat("/", ["https://github.com", repo, "settings", "access"])])
 }
 
-overview_report := v {
-  c_report := concat("\n", report)
-  v := sprintf(c_report, [overview_section, findings, recommendation_section, utils.json_to_md_list(settings_urls, "  ")])
-}
-
-d_report := [
-  "## Collaborators",
-  "%s",
-  "%s",
+detailed_report := concat("\n", [
+  module_title,
+  overview_section,
+  recommendation_section,
   "",
   "Go [back](#collaborators) to the overview report.",
   "",
@@ -132,10 +128,10 @@ d_report := [
   "<details open>",
   "<summary> <b>Outside Collaborators</b> </summary>",
   "",
-  "%s",
+  collaborators_details,
   "</details>",
   "",
-]
+])
 
 collaborators_details = v {
   count(non_empty_collaborators) == 0
@@ -147,6 +143,7 @@ collaborators_details = v {
   v := utils.json_to_md_dict_of_lists(non_empty_collaborators, "  ")
 }
 
-detailed_report := v {
-  v := sprintf(concat("\n", d_report), [overview_section, recommendation_section, collaborators_details])
+# See comment about update in admins.rego
+update := v {
+  v := { "known": non_empty_collaborators, }
 }

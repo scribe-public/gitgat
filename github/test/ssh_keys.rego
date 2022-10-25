@@ -1,4 +1,4 @@
-package test.ssh_keys
+package github.test.ssh_keys
 
 import future.keywords.in
 

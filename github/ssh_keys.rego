@@ -3,7 +3,7 @@ package github.ssh_keys
 import future.keywords.in
 import data.github.utils as utils
 
-rule_set = input.rule_set { utils.exists(input, "rule_set") } else := data.rule_set
+rule_set = input.rule_set { utils.exists(input, "rule_set") } else := data.github.rule_set
 
 # Keys
 responses := utils.parse(data.github.api.call_github("user/keys")) {
@@ -88,44 +88,40 @@ recommendation_section := concat("\n", [
   "SSH keys generation is done via the following link: <https://github.com/settings/keys>.",
 ])
 
-report := [
-  "## SSH Keys",
+module_title := "## SSH Keys"
+overview_report := concat("\n", [
+  module_title,
   "### Motivation",
-  "%s",
+  overview_section,
   "",
 
   "### Key Findings",
-  "%s",
+  findings,
   "",
   "See [below](#ssh-keys-1) for a detailed report.",
   "",
 
   "### Our Recommendation",
-  "%s",
+  recommendation_section,
   "",
-]
+])
 
-overview_report := v {
-  c_report := concat("\n", report)
-  v := sprintf(c_report, [overview_section, findings, recommendation_section])
-}
-
-d_report := [
-  "## SSH Keys",
-  "%s",
-  "%s",
+detailed_report := concat("\n", [
+  module_title,
+  overview_section,
+  recommendation_section,
   "",
   "Go [back](#ssh-keys) to the overview report.",
   "",
 
   "<b>Expired</b>",
-  "%s",
+  expired_details,
   "",
 
   "<b>All</b>",
-  "%s",
+  non_empty_details,
   ""
-]
+])
 
 expired_details = v {
   count(expired) == 0
@@ -163,6 +159,7 @@ non_empty_details = v {
     non_empty_details_keys, "")])
 }
 
-detailed_report := v {
-  v := sprintf(concat("\n", d_report), [overview_section, recommendation_section, expired_details, non_empty_details])
+# See comment about update in admins.rego
+update := v {
+  v := { "keys": user_keys, }
 }

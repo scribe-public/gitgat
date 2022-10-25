@@ -21,7 +21,14 @@ report := [
   "",
 ]
 
-rule_set := input.rule_set { utils.exists(input, "rule_set") } else := data.rule_set
+rule_set := input.rule_set { utils.exists(input, "rule_set") } else := data.github.rule_set
+debug_modules := input.debug_modules { utils.exists(input, "debug_modules") } else := data.github.debug_modules
+
+gh_overview_modules["debug"] := debug_modules
+
+gh_detailed_modules["debug"] := debug_modules
+
+gh_intro["debug"] := "This report is a debug-view report, used by developers."
 
 gh_overview_modules["org"] := ["repos", "tfa", "admins", "teams", "collaborators", "branches", "commits", "deploy_keys", "files",]
 
@@ -54,7 +61,9 @@ print_report = v {
   v := 1
 }
 
-gh_update_modules["user"] := ["token", "admins", "tfa"]
+gh_update_modules["user"] := ["token", "tfa", "admins", "collaborators", "deploy_keys", "ssh_keys",]
+
+gh_update_modules["org"] := ["token", "tfa", "admins", "collaborators", "deploy_keys",]
 
 f_update := v {
   v := { m: data.github[m].update | some m in gh_update_modules[rule_set] }

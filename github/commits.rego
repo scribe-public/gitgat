@@ -4,7 +4,6 @@ import future.keywords.in
 import data.github.utils as utils
 
 commits_urls[x] = trim_suffix(data.github.repos.repos[x].commits_url, "{/sha}")
-#commits_urls[x] = concat("?", [trim_suffix(data.github.repos.repos[x].commits_url, "{/sha}"), "per_page=2&page=2"])
 
 responses[x] = utils.parse(data.github.api.call_github_abs(commits_urls[x])) {
   some x, _ in data.github.state.commits.config
@@ -77,32 +76,28 @@ recommendation_section := concat("\n", [
   "<https://docs.github.com/en/authentication/managing-commit-signature-verification/signing-commits>",
 ])
 
-report := [
-  "## Signed Commits",
+module_title := "## Signed Commits"
+overview_report := concat("\n", [
+  module_title,
   "### Motivation",
-  "%s",
+  overview_section,
   "",
 
   "### Key Findings",
-  "%s",
+  findings,
   "",
   "See [below](#signed-commits-1) for a detailed report.",
   "",
 
   "### Our Recommendation",
-  "%s",
+  recommendation_section,
   "",
-]
+])
 
-overview_report := v {
-  c_report := concat("\n", report)
-  v := sprintf(c_report, [overview_section, findings, recommendation_section])
-}
-
-d_report := [
-  "## Signed Commits",
-  "%s",
-  "%s",
+detailed_report := concat("\n", [
+  module_title,
+  overview_section,
+  recommendation_section,
   "",
   "Go [back](#signed-commits) to the overview report.",
   "",
@@ -110,10 +105,10 @@ d_report := [
   "<details open>",
   "<summary> <b>Unverified Commits</b> </summary>",
   "",
-  "%s",
+  unverified_commits_details,
   "</details>",
   "",
-]
+])
 
 unverified_commits_data = { repo: result |
   some repo, repo_commits in commits_unverified
@@ -135,8 +130,4 @@ unverified_commits_details := v {
     utils.json_to_md_array_of_dict_to_table(unverified_commits_data[repo], table_keys, "") }
 
   v := utils.json_to_md_dict(tables, ":\n\n", "  ")
-}
-
-detailed_report := v {
-  v := sprintf(concat("\n", d_report), [overview_section, recommendation_section, unverified_commits_details])
 }

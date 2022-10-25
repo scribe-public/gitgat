@@ -1,4 +1,4 @@
-package test.files
+package github.test.files
 
 files_responses := {
   "owner/repo": {
