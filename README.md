@@ -18,8 +18,11 @@ You will need the following permissions:
 * read:org
 * read:user 
 * read:public_key
+* repo:status
+* repo_deployment
 * read:repo
 * read:repo_hook
+* public_repo
 
 If needed, refer to each module's section to figure out what permissions are needed to evaluate the module's policies.
 
