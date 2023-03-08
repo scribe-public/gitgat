@@ -22,6 +22,7 @@ You will need the following permissions:
 * repo_deployment
 * read:repo_hook
 * public_repo
+* gist
 
 If needed, refer to each module's section to figure out what permissions are needed to evaluate the module's policies.
 
