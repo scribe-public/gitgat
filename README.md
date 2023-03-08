@@ -20,7 +20,6 @@ You will need the following permissions:
 * read:public_key
 * repo:status
 * repo_deployment
-* read:repo
 * read:repo_hook
 * public_repo
 
